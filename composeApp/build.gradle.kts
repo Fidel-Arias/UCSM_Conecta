@@ -7,6 +7,7 @@ plugins {
     alias(libs.plugins.androidApplication)
     alias(libs.plugins.composeMultiplatform)
     alias(libs.plugins.composeCompiler)
+    alias(libs.plugins.kotlinxSerialization)
 }
 
 kotlin {
@@ -35,6 +36,7 @@ kotlin {
             implementation(libs.androidx.activity.compose)
             implementation("androidx.compose.material:material-icons-extended:1.6.0")
             implementation("com.google.zxing:core:3.5.3")
+            implementation(libs.ktor.client.okhttp)
         }
         commonMain.dependencies {
             implementation(compose.runtime)
@@ -43,8 +45,19 @@ kotlin {
             implementation(compose.ui)
             implementation(compose.components.resources)
             implementation(compose.components.uiToolingPreview)
-            implementation(libs.androidx.lifecycle.viewmodel)
+            implementation(libs.androidx.lifecycle.viewmodel.compose)
             implementation(libs.androidx.lifecycle.runtimeCompose)
+            implementation(libs.ktor.client.core)
+            implementation(libs.ktor.client.contentnegotiation)
+            implementation(libs.ktor.serialization.json)
+            implementation(libs.androidx.security)
+            implementation(libs.coil.network.ktor)
+            implementation(libs.kamel.image)
+            implementation(libs.kotlinx.datetime)
+        }
+
+        iosMain.dependencies {
+            implementation(libs.ktor.client.darwin)
         }
         commonTest.dependencies {
             implementation(libs.kotlin.test)

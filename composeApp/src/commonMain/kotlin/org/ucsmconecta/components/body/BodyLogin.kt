@@ -11,9 +11,12 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -27,16 +30,22 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
+import kotlinx.coroutines.delay
 import org.jetbrains.compose.resources.Font
 import org.jetbrains.compose.resources.painterResource
-import org.jetbrains.compose.ui.tooling.preview.Preview
-import org.ucsmconecta.components.inputs.EmailTextField
-import org.ucsmconecta.components.inputs.PasswordTextField
+import org.ucsmconecta.components.inputs.DocumentoTextField
 import org.ucsmconecta.components.button.CustomButton
+import org.ucsmconecta.data.model.UiState.UiState
+import org.ucsmconecta.data.network.ApiService
+import org.ucsmconecta.data.network.createHttpClient
+import org.ucsmconecta.data.repository.AuthRepository
+import org.ucsmconecta.ui.theme.ErrorColor
 import ucsmconecta.composeapp.generated.resources.Res
 import ucsmconecta.composeapp.generated.resources.ReadexProBold
 import org.ucsmconecta.ui.theme.PrimaryColor
-import ucsmconecta.composeapp.generated.resources.logoJinis2024
+import org.ucsmconecta.util.getTokenStorage
+import org.ucsmconecta.viewmodel.LoginViewModel
 import ucsmconecta.composeapp.generated.resources.logoJinis2025
 
 @Composable
@@ -52,12 +61,15 @@ fun BodyLogin(onLoginSuccess: () -> Unit) {
         HeaderBodyLogin()
         Spacer(modifier = Modifier.height(20.dp)) // Espacio entre el encabezado y el cuerpo
         SubtitleBody(
-            subtitle = "XXXI Jornada Internacional de Ingeniería de Sistemas",
+            subtitle = "XXXII Jornada Internacional de Ingeniería de Sistemas",
             fontFamily = READEX_PRO_BOLD,
             fontSize = 18.sp
         ) // Título de la sección
         Spacer(modifier = Modifier.height(20.dp))
-        Login(READEX_PRO_BOLD, onLoginSuccess = { onLoginSuccess() })
+        Login(
+            readexProBold = READEX_PRO_BOLD,
+            onLoginSuccess = { onLoginSuccess() },
+        )
     }
 }
 
@@ -85,12 +97,25 @@ fun HeaderBodyLogin() {
 @Composable
 fun Login(
     readexProBold: FontFamily,
-    onLoginSuccess: () -> Unit
+    onLoginSuccess: () -> Unit,
 ) {
     // Variables para almacenar el estado de los campos de texto
-    var email by remember { mutableStateOf("") }
-    var password by remember { mutableStateOf("") }
+    var numDocumento by remember { mutableStateOf("") }
     var passwordVisible by remember { mutableStateOf(false) }
+    var pendingMessage by remember { mutableStateOf<String?>(null) }
+
+    // Manejador de almacenamiento (Android/iOS)
+    val tokenStorage = getTokenStorage()
+
+    // Implementacion del cliente
+    val client = createHttpClient()
+
+    // ViewModel y repositorio
+    val repository = remember { AuthRepository(ApiService(client, null)) }
+    val viewModel = viewModel { LoginViewModel(repository) }
+
+    // Estado del ViewModel
+    val uiState by viewModel.uiState.collectAsState()
 
     // TextFields para el inicio de sesión
     val textFieldColors = TextFieldDefaults.colors(
@@ -105,7 +130,7 @@ fun Login(
 
     Column(
         modifier = Modifier
-            .fillMaxHeight(0.75f)
+            .fillMaxHeight(0.60f)
             .fillMaxWidth()
             .clip(RoundedCornerShape(18.dp)) // <- recorta el contenedor con esquinas redondeadas
             .background(Color.Black.copy(0.5f))
@@ -124,32 +149,78 @@ fun Login(
 
         Spacer(modifier = Modifier.height(20.dp)) // Espacio entre el título y los campos de texto
 
-        EmailTextField(
-            value = email,
-            onValueChange = { email = it },
-            label = "Correo Electrónico",
-            textFieldColors = textFieldColors,
-        )
-
-        Spacer(modifier = Modifier.height(10.dp))
-
-        PasswordTextField(
-            value = password,
-            onValueChange = { password = it },
-            label = "Contraseña",
+        DocumentoTextField(
+            value = numDocumento,
+            onValueChange = { numDocumento = it },
+            label = "Número de documento",
             textFieldColors = textFieldColors,
             passwordVisible = passwordVisible,
             onPasswordVisibilityChange = { passwordVisible = !passwordVisible },
         )
 
-        Spacer(modifier = Modifier.height(20.dp))
+        when (uiState) {
+            is UiState.Idle -> {
+                pendingMessage?.let { msg ->
+                    Text(
+                        text = msg,
+                        fontSize = 14.sp,
+                        color = ErrorColor
+                    )
+                    // limpiar el mensaje en la siguiente composición de forma segura:
+                    LaunchedEffect(msg) {
+                        // esperar 3 segundo para eliminar
+                        delay(3000)
+                        pendingMessage = null
+                    }
+                }
 
-        CustomButton(onClick = { onLoginSuccess() }, text = "Ingresar") // Botón personalizado para iniciar sesión
+                Spacer(modifier = Modifier.height(10.dp))
+
+                CustomButton(
+                    onClick = {
+                        if (numDocumento.isNotBlank()) {
+                            viewModel.login(numDocumento)
+                        } else {
+                            pendingMessage = "Ingrese su número de documento" // sólo setea el estado
+                        }
+                    },
+                    text = "Ingresar"
+                )
+            }
+
+            is UiState.Loading -> {
+                Spacer(modifier = Modifier.height(20.dp))
+                CircularProgressIndicator(color = PrimaryColor)
+            }
+
+            is UiState.Success -> {
+                val data = (uiState as UiState.Success).data
+                val token = data.token
+                val role = data.role
+                val id = data.id
+
+                // Guardar token y navegar
+                LaunchedEffect(token) {
+                    tokenStorage.saveToken(token, role, id)
+                    onLoginSuccess()
+                }
+            }
+
+            is UiState.Error -> {
+                val message = (uiState as UiState.Error).message
+                Text("$message", color = Color.Red)
+                LaunchedEffect(message) {
+                    delay(3000)
+                    viewModel.resetState() // <-- debes agregar esta función en tu ViewModel
+                }
+                Spacer(modifier = Modifier.height(10.dp))
+                CustomButton(
+                    onClick = {
+                        viewModel.login(numDocumento)
+                    },
+                    text = "Reintentar"
+                )
+            }
+        }
     }
-}
-
-@Preview
-@Composable
-fun LoginPreview() {
-    BodyLogin(onLoginSuccess = {})
 }

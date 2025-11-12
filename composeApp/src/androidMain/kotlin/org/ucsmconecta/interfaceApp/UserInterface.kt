@@ -1,6 +1,7 @@
 package org.ucsmconecta.interfaceApp
 
 import android.app.Activity
+import android.content.Intent
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
@@ -13,9 +14,13 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -28,24 +33,89 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.zIndex
+import androidx.lifecycle.viewmodel.compose.viewModel
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.Font
 import org.jetbrains.compose.resources.painterResource
-import org.jetbrains.compose.ui.tooling.preview.Preview
-import org.ucsmconecta.components.body.CommentsInterface
+import org.ucsmconecta.activities.LoginActivity
 import org.ucsmconecta.components.body.PerfilInterface
 import org.ucsmconecta.components.body.PresentationsInterface
 import org.ucsmconecta.components.navbar.Navbar
+import org.ucsmconecta.components.refresh.RefreshableContent
+import org.ucsmconecta.data.network.ApiService
+import org.ucsmconecta.data.network.createHttpClient
+import org.ucsmconecta.data.repository.ParticipanteRepository
+import org.ucsmconecta.infra.errors.UnauthorizedException
+import org.ucsmconecta.util.TokenStorage
+import org.ucsmconecta.util.backLogin
+import org.ucsmconecta.util.getTokenStorage
+import org.ucsmconecta.viewmodel.AsistenciaViewModel
+import org.ucsmconecta.viewmodel.BloqueViewModel
+import org.ucsmconecta.viewmodel.ParticipanteViewModel
 import ucsmconecta.composeapp.generated.resources.Res
 import ucsmconecta.composeapp.generated.resources.Righteous_Regular
 import ucsmconecta.composeapp.generated.resources.campusUcsmManiana
 
-@Preview
+suspend fun recargarDatos(
+    participanteViewModel: ParticipanteViewModel,
+    bloqueViewModel: BloqueViewModel,
+    token: TokenStorage
+) {
+    val id = token.getId()
+    participanteViewModel.cargarDatosColaborador(id)
+    bloqueViewModel.cargarTodosLosBloquesPorDia()
+}
+
 @Composable
-actual fun InterfazUserApp() {
+actual fun InterfazUserApp(tokenStorage: TokenStorage) {
     val imageUCSMManiana = painterResource(Res.drawable.campusUcsmManiana)
     var selectedItemNavbar by remember { mutableStateOf(0) }
     val context = LocalContext.current
     val font = FontFamily(Font(Res.font.Righteous_Regular))
+    val coroutineScope = rememberCoroutineScope()
+
+    // Conexion con el cliente
+    val client = createHttpClient()
+
+    // Llamando a repository
+    val repository = remember { ParticipanteRepository(ApiService(client, tokenStorage)) }
+
+    // Cargando la vista del viewModel
+    val participanteViewModel = viewModel { ParticipanteViewModel(repository) }
+    val bloquesViewModel = viewModel { BloqueViewModel(repository) }
+    val asistenciaViewModel = viewModel { AsistenciaViewModel(repository) }
+
+    // Estado del ViewModel
+    val participanteState by participanteViewModel.uiState.collectAsState()
+    val bloqueState by bloquesViewModel.uiState.collectAsState()
+
+    val diaActual by produceState<String?>(initialValue = null) {
+        value = repository.obtenerFechaServidor()
+    }
+
+    var firstLoad by remember { mutableStateOf(true) }
+
+    LaunchedEffect(Unit) {
+        if(firstLoad) {
+            val token = tokenStorage.getToken()
+            if (token == null) {
+                backLogin()
+            } else {
+                try {
+                    recargarDatos(participanteViewModel, bloquesViewModel, tokenStorage)
+                } catch (e: UnauthorizedException) {
+                    // Token expirado
+                    backLogin()
+                } catch (e: Exception) {
+                    // Otro error
+                    println("Error al cargar datos: ${e.message}")
+                }
+            }
+            firstLoad = false
+        }
+    }
 
     Scaffold(
         bottomBar = {
@@ -53,7 +123,14 @@ actual fun InterfazUserApp() {
                 selectedItem = selectedItemNavbar,
                 onItemSelected = { newItem ->
                     if (newItem == 3) {
-                        (context as? Activity)?.finish()
+                        // 🔹 Ejecutar logout
+                        CoroutineScope(Dispatchers.IO).launch {
+                            getTokenStorage().clear()
+                        }
+                        (context as? Activity)?.let { activity ->
+                            activity.startActivity(Intent(activity, LoginActivity::class.java))
+                            activity.finish()
+                        }
                     } else {
                         selectedItemNavbar = newItem
                     }
@@ -121,22 +198,39 @@ actual fun InterfazUserApp() {
                 ),
                 color = Color.White
             ) {
-                when (selectedItemNavbar) {
-                    0 ->
-                        PerfilInterface(
-                            title = "PERFIL",
-                            modifier = Modifier.fillMaxSize()
-                        )
-                    1 ->
-                        PresentationsInterface(
-                            title = "PONENCIAS",
-                            modifier = Modifier.fillMaxSize()
-                        )
-                    2 ->
-                        CommentsInterface(
-                            title = "COMENTARIOS",
-                            modifier = Modifier.fillMaxSize()
-                        )
+                RefreshableContent(
+                    selectedItem = selectedItemNavbar,
+                    onRefresh = {
+                        coroutineScope.launch {
+                            recargarDatos(
+                                participanteViewModel = participanteViewModel,
+                                bloqueViewModel = bloquesViewModel,
+                                token = tokenStorage
+                            )
+                        }
+                    }
+                ) {
+                    when (selectedItemNavbar) {
+                        0 ->
+                            PerfilInterface(
+                                title = "PERFIL",
+                                modifier = Modifier.fillMaxSize(),
+                                participanteState = participanteState,
+                                diaActual = diaActual,
+                                asistenciaViewModel = asistenciaViewModel
+                            )
+                        1 ->
+                            PresentationsInterface(
+                                title = "PONENCIAS",
+                                modifier = Modifier.fillMaxSize(),
+                                bloqueState = bloqueState
+                            )
+//                    2 ->
+//                        CommentsInterface(
+//                            title = "COMENTARIOS",
+//                            modifier = Modifier.fillMaxSize()
+//                        )
+                    }
                 }
             }
         }

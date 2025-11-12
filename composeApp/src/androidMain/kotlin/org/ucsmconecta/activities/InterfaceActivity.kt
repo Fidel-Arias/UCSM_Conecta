@@ -1,16 +1,18 @@
 package org.ucsmconecta.activities
 
-import android.os.Build
 import android.os.Bundle
+import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.ui.graphics.toArgb
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
+import androidx.security.crypto.EncryptedSharedPreferences
+import androidx.security.crypto.MasterKey
 import org.ucsmconecta.interfaceApp.InterfazUserApp
-import androidx.core.graphics.toColorInt
 import org.ucsmconecta.ui.theme.PrimaryColor
+import org.ucsmconecta.util.getTokenStorage
 
 class InterfaceActivity: ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -28,8 +30,10 @@ class InterfaceActivity: ComponentActivity() {
         // Cambiar el color de la barra de estado a cyan
         window.statusBarColor = PrimaryColor.toArgb() // cyan
 
+        val token = getTokenStorage()
+
         setContent {
-            InterfazUserApp()
+            InterfazUserApp(tokenStorage = token)
         }
     }
 }

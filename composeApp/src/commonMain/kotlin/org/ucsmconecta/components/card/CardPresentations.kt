@@ -1,12 +1,9 @@
 package org.ucsmconecta.components.card
 
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -22,7 +19,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.painter.Painter
-import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
@@ -31,10 +27,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import org.jetbrains.compose.resources.Font
 import org.jetbrains.compose.resources.painterResource
-import org.jetbrains.compose.ui.tooling.preview.Preview
 import ucsmconecta.composeapp.generated.resources.Res
 import ucsmconecta.composeapp.generated.resources.Righteous_Regular
-import ucsmconecta.composeapp.generated.resources.ponenteGerman
 
 @Composable
 fun CardPresentations(
@@ -145,20 +139,4 @@ fun CardPresentations(
             )
         }
     }
-}
-
-
-@Composable
-fun CardPresePrev() {
-    CardPresentations(
-        modifier = Modifier.padding(10.dp),
-        title = "Desafíos y oportunidades de la Inteligencia Artificial en el Perú",
-        ponente = "Ing. Walter Pinedo",
-        lugar = "Auditorio William Morris",
-        startHour = "09:30",
-        endHour = "14:45",
-        date = "28/10/2025",
-        font = FontFamily(Font(Res.font.Righteous_Regular)),
-        image = painterResource(Res.drawable.ponenteGerman)
-    )
 }

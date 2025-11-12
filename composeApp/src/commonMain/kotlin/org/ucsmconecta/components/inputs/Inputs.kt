@@ -36,40 +36,40 @@ import ucsmconecta.composeapp.generated.resources.Res
 import ucsmconecta.composeapp.generated.resources.arroba
 import ucsmconecta.composeapp.generated.resources.send_icon
 
-@Composable
-fun EmailTextField(
-    value: String,
-    onValueChange: (String) -> Unit,
-    label: String,
-    textFieldColors: TextFieldColors,
-) {
-    val ArrobaIcon = painterResource(Res.drawable.arroba)
-    OutlinedTextField(
-        value = value,
-        onValueChange = onValueChange,
-        placeholder = {Text(label)},
-        singleLine = true,
-        leadingIcon = {
-            IconButton(
-                onClick = {}
-            ) {
-                Image(
-                    painter = ArrobaIcon,
-                    contentDescription = "Icono de correo",
-                    modifier = Modifier
-                        .size(30.dp)
-                )
-            }
-        },
-        shape = RoundedCornerShape(16.dp),
-        colors = textFieldColors,
-        modifier = Modifier
-            .fillMaxWidth()
-    )
-}
+//@Composable
+//fun EmailTextField(
+//    value: String,
+//    onValueChange: (String) -> Unit,
+//    label: String,
+//    textFieldColors: TextFieldColors,
+//) {
+//    val ArrobaIcon = painterResource(Res.drawable.arroba)
+//    OutlinedTextField(
+//        value = value,
+//        onValueChange = onValueChange,
+//        placeholder = {Text(label)},
+//        singleLine = true,
+//        leadingIcon = {
+//            IconButton(
+//                onClick = {}
+//            ) {
+//                Image(
+//                    painter = ArrobaIcon,
+//                    contentDescription = "Icono de correo",
+//                    modifier = Modifier
+//                        .size(30.dp)
+//                )
+//            }
+//        },
+//        shape = RoundedCornerShape(16.dp),
+//        colors = textFieldColors,
+//        modifier = Modifier
+//            .fillMaxWidth()
+//    )
+//}
 
 @Composable
-fun PasswordTextField(
+fun DocumentoTextField(
     value: String,
     passwordVisible: Boolean,
     onValueChange: (String) -> Unit,

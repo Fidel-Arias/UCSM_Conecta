@@ -1,6 +1,5 @@
 package org.ucsmconecta.interfaceApp
 
-import android.content.Intent
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.animateDpAsState
@@ -26,12 +25,10 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalWindowInfo
 import androidx.compose.ui.unit.dp
 import org.jetbrains.compose.resources.painterResource
-import org.ucsmconecta.activities.InterfaceActivity
 import org.ucsmconecta.components.body.BodyLogin
 import org.ucsmconecta.components.body.BodyParticipantes
 import org.ucsmconecta.components.header.header
@@ -39,8 +36,8 @@ import ucsmconecta.composeapp.generated.resources.Res
 import ucsmconecta.composeapp.generated.resources.campusUcsmTarde
 
 @Composable
-actual fun App() {
-    val context = LocalContext.current
+actual fun App(startActivityInterface: () -> Unit) {
+
     val painter = painterResource(Res.drawable.campusUcsmTarde)
     val headerHeight = 80.dp
 
@@ -117,8 +114,8 @@ actual fun App() {
                 ) {
                     BodyLogin(
                         onLoginSuccess = {
-                            context.startActivity(Intent(context, InterfaceActivity::class.java))
-                        }
+                            startActivityInterface()
+                        },
                     )
                 }
             }

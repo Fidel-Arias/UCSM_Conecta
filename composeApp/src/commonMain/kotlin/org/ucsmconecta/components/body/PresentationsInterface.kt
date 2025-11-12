@@ -1,14 +1,18 @@
 package org.ucsmconecta.components.body
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -22,14 +26,19 @@ import androidx.compose.ui.zIndex
 import org.jetbrains.compose.resources.Font
 import org.jetbrains.compose.resources.painterResource
 import org.ucsmconecta.components.card.CardPresentations
+import org.ucsmconecta.components.icons.getIconError
+import org.ucsmconecta.data.model.UiState.UiState
+import org.ucsmconecta.data.model.bloque.BloqueResponse
+import org.ucsmconecta.ui.theme.PrimaryColor
 import ucsmconecta.composeapp.generated.resources.Res
 import ucsmconecta.composeapp.generated.resources.Righteous_Regular
-import ucsmconecta.composeapp.generated.resources.ponenteGerman
+import ucsmconecta.composeapp.generated.resources.ponencias_icon
 
 @Composable
 fun PresentationsInterface(
     title: String,
-    modifier: Modifier
+    modifier: Modifier,
+    bloqueState: UiState<List<BloqueResponse>>
 ) {
     val righteousFont = FontFamily(Font(Res.font.Righteous_Regular))
     val scrollState = rememberScrollState()
@@ -69,50 +78,50 @@ fun PresentationsInterface(
                 .zIndex(1f),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            CardPresentations(
-                modifier = Modifier.padding(10.dp),
-                title = "Desafíos y oportunidades de la Inteligencia Artificial en el Perú",
-                ponente = "Ing. Walter Pinedo",
-                lugar = "Auditorio William Morris",
-                startHour = "08:00",
-                endHour = "10:45",
-                date = "28/10/2025",
-                font = FontFamily(Font(Res.font.Righteous_Regular)),
-                image = painterResource(Res.drawable.ponenteGerman)
-            )
-            CardPresentations(
-                modifier = Modifier.padding(10.dp),
-                title = "Desafíos y oportunidades de la Inteligencia Artificial en el Perú",
-                ponente = "Ing. Walter Pinedo",
-                lugar = "Auditorio William Morris",
-                startHour = "09:30",
-                endHour = "12:45",
-                date = "28/10/2025",
-                font = FontFamily(Font(Res.font.Righteous_Regular)),
-                image = painterResource(Res.drawable.ponenteGerman)
-            )
-            CardPresentations(
-                modifier = Modifier.padding(10.dp),
-                title = "Desafíos y oportunidades de la Inteligencia Artificial en el Perú",
-                ponente = "Ing. Walter Pinedo",
-                lugar = "Auditorio William Morris",
-                startHour = "10:30",
-                endHour = "14:45",
-                date = "28/10/2025",
-                font = FontFamily(Font(Res.font.Righteous_Regular)),
-                image = painterResource(Res.drawable.ponenteGerman)
-            )
-            CardPresentations(
-                modifier = Modifier.padding(10.dp),
-                title = "Desafíos y oportunidades de la Inteligencia Artificial en el Perú",
-                ponente = "Ing. Walter Pinedo",
-                lugar = "Auditorio William Morris",
-                startHour = "11:30",
-                endHour = "15:45",
-                date = "28/10/2025",
-                font = FontFamily(Font(Res.font.Righteous_Regular)),
-                image = painterResource(Res.drawable.ponenteGerman)
-            )
+            when(bloqueState) {
+                is UiState.Loading -> CircularProgressIndicator(color = PrimaryColor)
+                is UiState.Success -> {
+                    if (bloqueState.data.isEmpty()) {
+                        Text("Ponencias no disponibles", color = Color.Gray)
+                    } else {
+                        bloqueState.data.forEach { bloque ->
+                            val nombresPonente = bloque.ponencia.ponente.nombres
+                            val apellidosPonente = bloque.ponencia.ponente.apellidos
+
+                            CardPresentations(
+                                modifier = Modifier.padding(10.dp),
+                                title = bloque.ponencia.nombre,
+                                ponente = "$nombresPonente $apellidosPonente",
+                                lugar = bloque.ubicacion.nombre,
+                                startHour = bloque.horaInicial,
+                                endHour = bloque.horaFinal,
+                                date = bloque.dia.fecha,
+                                font = FontFamily(Font(Res.font.Righteous_Regular)),
+                                image = painterResource(Res.drawable.ponencias_icon)
+                            )
+                        }
+                    }
+
+                }
+                is UiState.Error ->  {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxSize(),
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.Center
+                    ) {
+                        Icon(
+                            imageVector = getIconError(),
+                            contentDescription = "Error",
+                            tint = Color.Gray,
+                            modifier = Modifier.size(30.dp)
+                        )
+                        Text(bloqueState.message, color = Color.Gray)
+                    }
+                }
+                else -> Unit
+            }
+
         }
     }
 }

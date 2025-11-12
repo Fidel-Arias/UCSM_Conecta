@@ -79,31 +79,31 @@ actual fun Navbar(
                 )
             }
         )
-        NavigationBarItem(
-            selected = selectedItem == 2,
-            onClick = { onItemSelected(2) },
-            colors = NavigationBarItemDefaults.colors(
-                selectedIconColor = Color.Black,
-                unselectedIconColor = Color.Gray,
-                selectedTextColor = Color.Black,
-                unselectedTextColor = Color.Gray,
-                indicatorColor = SecondaryColor
-            ),
-            icon = {
-                Icon(
-                    imageVector = Icons.Filled.ChatBubbleOutline,
-                    contentDescription = "Comentarios",
-                )
-            },
-            label = {
-                Text(
-                    text = "Comentarios",
-                    fontSize = 12.sp,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis
-                )
-            }
-        )
+//        NavigationBarItem(
+//            selected = selectedItem == 2,
+//            onClick = { onItemSelected(2) },
+//            colors = NavigationBarItemDefaults.colors(
+//                selectedIconColor = Color.Black,
+//                unselectedIconColor = Color.Gray,
+//                selectedTextColor = Color.Black,
+//                unselectedTextColor = Color.Gray,
+//                indicatorColor = SecondaryColor
+//            ),
+//            icon = {
+//                Icon(
+//                    imageVector = Icons.Filled.ChatBubbleOutline,
+//                    contentDescription = "Comentarios",
+//                )
+//            },
+//            label = {
+//                Text(
+//                    text = "Comentarios",
+//                    fontSize = 12.sp,
+//                    maxLines = 1,
+//                    overflow = TextOverflow.Ellipsis
+//                )
+//            }
+//        )
         NavigationBarItem(
             selected = selectedItem == 3,
             onClick = { onItemSelected(3) },

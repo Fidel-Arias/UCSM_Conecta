@@ -104,7 +104,6 @@ fun CuerpoCarreras(
     // Lista de imágenes de las carreras
     val listImages = listOf(
         painterResource(Res.drawable.ucsmIngSistemas),
-        painterResource(Res.drawable.ucsmIngIndustrial),
     )
     val READEX_PRO_BOLD = FontFamily(
         Font(Res.font.ReadexProBold)
@@ -127,7 +126,6 @@ fun CuerpoCarreras(
                     // Se usa when para asignar el nombre de la carrera según el índice
                     carrera = when (i) {
                         0 -> "Escuela Profesional de Ingeniería de Sistemas"
-                        1 -> "Escuela Profesional de Ingeniería Industrial"
                         else -> "Carrera Desconocida"
                     },
                     image = listImages[i],

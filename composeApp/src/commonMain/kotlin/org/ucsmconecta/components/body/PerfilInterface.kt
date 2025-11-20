@@ -33,6 +33,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.zIndex
@@ -75,10 +76,11 @@ private fun NameUser(name: String) {
             color = Color.Black,
             fontWeight = FontWeight.SemiBold,
             textAlign = TextAlign.Start,
+            overflow = TextOverflow.Ellipsis,
+            maxLines = 1,
             modifier = Modifier
                 .weight(1f)
                 .padding(end = 8.dp),
-            softWrap = true
         )
     }
 }
@@ -198,8 +200,6 @@ fun PerfilInterface(
                         )
                     }
 
-                    println("ASISTENCIA: $totalAsistencias")
-
                     NameUser("$nommbre $apPaterno $apMaterno")
 
                     Spacer(modifier = Modifier.height(18.dp))
@@ -218,7 +218,6 @@ fun PerfilInterface(
                                 )
                             }
                             errorAsistencia != null -> {
-                                println("ERROR ASISTENCIA: $errorAsistencia")
                                 BlockDataUser(
                                     value = 0,
                                     label = "Error",
@@ -273,7 +272,7 @@ fun PerfilInterface(
                             imageVector = getIconError(),
                             contentDescription = "Error"
                         )
-                        Text("Error al cargar el participante", color = ErrorColor)
+                        Text("Error al cargar tus datos", color = ErrorColor)
                     }
                 }
                 else -> Unit

@@ -96,9 +96,13 @@ class ApiService(
                 HttpStatusCode.NotFound -> {
                     Result.failure(EntityNotFound("Participante no existe"))
                 }
-                else -> {
+
+                HttpStatusCode.OK -> {
                     val body = response.body<ParticipanteResponse>()
                     Result.success(body)
+                }
+                else -> {
+                    Result.failure(Exception("Error inesperado: ${response.status}"))
                 }
             }
         } catch (e: SocketTimeoutException) {
@@ -121,7 +125,6 @@ class ApiService(
                 }
             }
 
-            println("RESPONSE STATUS: ${response.status}")
             return when(response.status) {
                 HttpStatusCode.Forbidden -> {
                     Result.failure(UnauthorizedException("Token expirado o no autorizado"))
@@ -132,9 +135,13 @@ class ApiService(
                 HttpStatusCode.NoContent -> {
                     Result.success(emptyList())
                 }
-                else -> {
+
+                HttpStatusCode.OK -> {
                     val body = response.body<List<BloqueResponse>>()
                     Result.success(body)
+                }
+                else -> {
+                    Result.failure(Exception("Error inesperado: ${response.status}"))
                 }
             }
         } catch (e: SocketTimeoutException) {
